@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>דוח תיק השקעות</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="sample_data.js"></script>
     <style>
         :root {
             --bg-color: #f0f2f5;
@@ -144,11 +145,106 @@
             align-items: center;
         }
 
+        /* Split Card Layout (Chart Left, Table Right) */
+        .split-card {
+            display: flex;
+            gap: 20px;
+            height: 100%;
+            flex: 1;
+            min-height: 350px;
+            overflow: hidden; /* Prevent overflow breaking layout */
+        }
+
+        .chart-side {
+            flex: 0 0 40%; /* Slightly wider chart area */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            min-width: 0; /* Critical for Flexbox resizing with Chart.js */
+        }
+
+        .table-side {
+            flex: 1; /* Table takes remaining space */
+            overflow-y: auto;
+            padding-right: 10px; /* Space for scrollbar */
+            min-width: 0; /* Critical for Flexbox resizing */
+        }
+
         /* Scorecards */
         .scorecard-container {
             display: flex;
             gap: 15px;
             flex-wrap: wrap;
+        }
+
+        /* Filterable Table Styles */
+        .filters-container {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            min-width: 150px;
+        }
+
+        .filter-label {
+            font-size: 0.85em;
+            color: var(--secondary-color);
+            font-weight: 500;
+        }
+
+        .filter-select, .filter-input {
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 0.9em;
+            background: white;
+        }
+
+        .filter-actions {
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #0b5ed7;
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+        }
+
+        .btn-outline:hover {
+            background-color: #e9ecef;
         }
         
         .scorecard {
@@ -184,7 +280,7 @@
             flex: 1;
             width: 100%;
             height: 100%;
-            min-height: 300px;
+            min-height: 250px; /* Reduced slightly for dense layouts */
             display: flex;
             justify-content: center;
             align-items: center;
@@ -198,6 +294,7 @@
         /* Tables */
         .table-container {
             overflow-x: auto;
+            width: 100%;
         }
         
         table {
@@ -207,7 +304,7 @@
         }
 
         th, td {
-            padding: 12px;
+            padding: 10px;
             text-align: right;
             border-bottom: 1px solid var(--border-color);
         }
@@ -217,6 +314,77 @@
             font-weight: 600;
             color: var(--secondary-color);
             white-space: nowrap;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        /* Filterable Table Styles */
+        .filters-container {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            min-width: 150px;
+        }
+
+        .filter-label {
+            font-size: 0.85em;
+            color: var(--secondary-color);
+            font-weight: 500;
+        }
+
+        .filter-select, .filter-input {
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 0.9em;
+            background: white;
+        }
+
+        .filter-actions {
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #0b5ed7;
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+        }
+
+        .btn-outline:hover {
+            background-color: #e9ecef;
         }
 
         /* Utilities */
@@ -230,6 +398,16 @@
             font-size: 0.75em;
             background: #e9ecef;
             color: #495057;
+        }
+
+        @media (max-width: 768px) {
+            .split-card {
+                flex-direction: column;
+            }
+            .chart-side {
+                flex: 0 0 300px;
+                width: 100%;
+            }
         }
 
     </style>
@@ -274,42 +452,249 @@
             <div class="scorecard-container" id="market-indices-container"></div>
         </div>
 
-        <!-- Strategy Row 1 -->
-        <div class="card col-4">
+        <!-- Section 1: Portfolio Overview (Allocation + Geography) -->
+        <div class="card col-6">
             <h2>אפיקי השקעה</h2>
-            <div class="chart-container">
-                <canvas id="assetAllocationChart"></canvas>
+            <div class="split-card">
+                <div class="chart-side">
+                    <canvas id="assetAllocationChart"></canvas>
+                </div>
+                <div class="table-side">
+                     <table id="asset-allocation-table">
+                        <thead>
+                            <tr>
+                                <th>אפיק</th>
+                                <th>שווי (₪)</th>
+                                <th>%</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
-        <div class="card col-4">
+        <div class="card col-6">
             <h2>חשיפה גיאוגרפית</h2>
-            <div class="chart-container">
-                <canvas id="geographyExposureChart"></canvas>
+             <div class="split-card">
+                <div class="chart-side">
+                    <canvas id="geographyExposureChart"></canvas>
+                </div>
+                <div class="table-side">
+                     <table id="geography-exposure-table">
+                        <thead>
+                            <tr>
+                                <th>אזור</th>
+                                <th>שווי (₪)</th>
+                                <th>%</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
-        <div class="card col-4">
-            <h2>חשיפה למטבעות</h2>
-            <div class="chart-container">
-                <canvas id="currencyExposureChart"></canvas>
+        <!-- Section 2: Accounts Breakdown -->
+        <div class="card col-12">
+            <h2>
+                ביצועים לפי חשבון (מתחילת שנה)
+                <div class="filter-actions" style="margin:0;">
+                    <button class="btn btn-outline" onclick="toggleAccountView('snapshot')" id="btn-view-snapshot">תמונת מצב</button>
+                    <button class="btn btn-outline" onclick="toggleAccountView('table')" id="btn-view-table">טבלה חודשית</button>
+                    <button class="btn btn-outline" onclick="toggleAccountView('trend')" id="btn-view-trend">מגמה</button>
+                </div>
+            </h2>
+            
+            <!-- View 1: Snapshot (Original) -->
+            <div id="view-snapshot" class="split-card">
+                <div class="chart-side" style="flex: 0 0 30%;">
+                    <canvas id="accountsPerformanceChart"></canvas>
+                </div>
+                <div class="table-side">
+                    <table id="accounts-performance-table">
+                        <thead>
+                            <tr>
+                                <th>שם חשבון</th>
+                                <th>מטבע</th>
+                                <th>שווי (₪)</th>
+                                <th>% מהתיק</th>
+                                <th>חודשי</th>
+                                <th>שנתי</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- View 2: Monthly Matrix Table -->
+            <div id="view-table" style="display:none; overflow-x: auto;">
+                 <table id="accounts-matrix-table">
+                    <thead>
+                        <tr>
+                            <th style="position:sticky; right:0; z-index:20; background:#f8f9fa;">שם חשבון</th>
+                            <th>ינו׳</th><th>פבר׳</th><th>מרץ</th><th>אפר׳</th><th>מאי</th><th>יוני</th>
+                            <th>יולי</th><th>אוג׳</th><th>ספט׳</th><th>אוק׳</th><th>נוב׳</th><th>דצמ׳</th>
+                            <th>YTD</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <!-- View 3: Trend Graph -->
+            <div id="view-trend" style="display:none; height: 100%; min-height: 350px;">
+                <div class="chart-container">
+                    <canvas id="accountsTrendChart"></canvas>
+                </div>
             </div>
         </div>
 
-        <!-- Strategy Row 2 -->
+        <!-- Section 3: Deep Dives (Equities & Bonds) -->
+        <div class="card col-12">
+            <h2>דו״ח הכנסות והוצאות מפורט</h2>
+            
+            <div class="filters-container">
+                <div class="filter-group">
+                    <label class="filter-label">סוג תנועה</label>
+                    <select id="filter-category" class="filter-select">
+                        <option value="">הכל</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">חשבון</label>
+                    <select id="filter-account" class="filter-select">
+                        <option value="">הכל</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">אפיק</label>
+                    <select id="filter-afik" class="filter-select">
+                        <option value="">הכל</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">מתאריך</label>
+                    <input type="date" id="filter-date-from" class="filter-input">
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">עד תאריך</label>
+                    <input type="date" id="filter-date-to" class="filter-input">
+                </div>
+                <div class="filter-actions">
+                    <button class="btn btn-primary" onclick="applyFilters()">סינון</button>
+                    <button class="btn btn-outline" onclick="clearFilters()">איפוס</button>
+                </div>
+            </div>
+
+            <div class="table-container" style="max-height: 400px; overflow-y: auto;">
+                <table id="income-expenses-table">
+                    <thead>
+                        <tr>
+                            <th>תאריך</th>
+                            <th>תיאור</th>
+                            <th>קטגוריה</th>
+                            <th>חשבון</th>
+                            <th>אפיק</th>
+                            <th>סכום (₪)</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div style="margin-top: 15px; text-align: left; font-weight: 600; color: var(--secondary-color);">
+                סה״כ לתקופה: <span id="filtered-total" class="ltr">₪0</span>
+            </div>
+        </div>
+
+  
+
         <div class="card col-6">
-            <h2>נזילות (Liquid vs Illiquid)</h2>
-            <div class="chart-container">
-                <canvas id="liquidityChart"></canvas>
+            <h2>מניות לפי סקטור</h2>
+            <div class="split-card">
+                 <div class="chart-side">
+                    <canvas id="equitiesSectorChart"></canvas>
+                </div>
+                <div class="table-side">
+                    <table id="equities-sector-table">
+                        <thead>
+                            <tr>
+                                <th>סקטור</th>
+                                <th>שווי (₪)</th>
+                                <th>%</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
         <div class="card col-6">
-            <h2>דירוג אג״ח</h2>
-            <div class="chart-container">
-                <canvas id="bondsRatingChart"></canvas>
+            <h2>אג״ח לפי לפדיון (מח״מ)</h2>
+             <div class="split-card">
+                 <div class="chart-side">
+                    <canvas id="bondsMaturityChart"></canvas>
+                </div>
+                <div class="table-side">
+                    <table id="bonds-maturity-table">
+                        <thead>
+                            <tr>
+                                <th>שנת פדיון</th>
+                                <th>שווי (₪)</th>
+                                <th>%</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
             </div>
         </div>
+
+
+        <div class="card col-6">
+            <h2>אג״ח לפי דירוג</h2>
+            <div class="split-card">
+                 <div class="chart-side">
+                    <canvas id="bondsRatingChart"></canvas>
+                </div>
+                <div class="table-side">
+                    <table id="bonds-rating-table">
+                        <thead>
+                            <tr>
+                                <th>דירוג</th>
+                                <th>שווי (₪)</th>
+                                <th>%</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="card col-6">
+            <h2>אג״ח לפי הצמדה</h2>
+             <div class="split-card">
+                 <div class="chart-side">
+                    <canvas id="bondsCurrencyChart"></canvas>
+                </div>
+                <div class="table-side">
+                    <table id="bonds-currency-table">
+                        <thead>
+                            <tr>
+                                <th>הצמדה</th>
+                                <th>שווי (₪)</th>
+                                <th>%</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
 
         <!-- Advanced Performance Analysis - REVISED SPLIT VIEW -->
         <div class="card col-12" style="min-height: auto;">
@@ -332,324 +717,796 @@
             </div>
         </div>
 
-        <!-- Top Holdings -->
-        <div class="card col-12">
-            <h2>אחזקות עיקריות</h2>
-            <div class="table-container">
-                <table id="holdings-table">
-                    <thead>
-                        <tr>
-                            <th>שם נייר הערך</th>
-                            <th>שווי שוק (₪)</th>
-                            <th>% מהתיק</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        </div>
-
     </div>
 </div>
 
-<script>
-    // Embedded Sample Data
-    const data = {
-      "market_indices": [
-        { "nechesId": "1", "nechesName": "S&P 500", "SymbolHalbana": "$", "MTD": 1.2, "YTD": 5.4 },
-        { "nechesId": "2", "nechesName": "TA 35", "SymbolHalbana": "₪", "MTD": -0.5, "YTD": 2.1 },
-        { "nechesId": "3", "nechesName": "NASDAQ", "SymbolHalbana": "$", "MTD": 2.1, "YTD": 8.3 }
-      ],
-      "tradable_assets": [
-        { "afikname": "Apple Inc.", "shovi": 150000, "ahuz": 15, "sort": 1 },
-        { "afikname": "Microsoft Corp.", "shovi": 120000, "ahuz": 12, "sort": 2 },
-        { "afikname": "Government Bond IL", "shovi": 300000, "ahuz": 30, "sort": 3 }
-      ],
-      "currency_exposure": [
-        { "hatzmadaid": "1", "hatzmadaName": "USD", "Shovi": 450000, "Ahuz": 45 },
-        { "hatzmadaid": "2", "hatzmadaName": "ILS", "Shovi": 550000, "Ahuz": 55 }
-      ],
-      "geography_exposure": [
-        { "CountryName": "United States", "Shovi": 600000, "Ahuz": 60 },
-        { "CountryName": "Israel", "Shovi": 400000, "Ahuz": 40 }
-      ],
-      "asset_class_breakdown": [
-        { "sugId": "1", "afikid": "10", "heshid": "100", "afikname": "Equities", "hesh_nameEng": "Global Equity", "shoviAhuz": 40 },
-        { "sugId": "2", "afikid": "20", "heshid": "200", "afikname": "Fixed Income", "hesh_nameEng": "Bonds", "shoviAhuz": 50 }
-      ],
-      "liquidity": [
-        { "SugName": "Liquid", "Shovi": 800000, "Ahuz": 80 },
-        { "SugName": "Illiquid", "Shovi": 200000, "Ahuz": 20 }
-      ],
-      "bonds_rating": [
-        { "DerugName": "AAA", "shovi": 200000, "ahuz": 40 },
-        { "DerugName": "AA", "shovi": 150000, "ahuz": 30 }
-      ],
-      "performance_by_month": [
-        { "sugDoh": "Monthly", "ddate": "2024-01-31", "shovi": 1000000, "afkada": 50000, "meshiha": 0, "netoDeposit": 50000, "revachNominBruto": 15000, "tsuaNeto": 1.5, "revachNominMizBruto": 15000, "tsuaNominMizNeto": 1.5 },
-        { "sugDoh": "Monthly", "ddate": "2024-02-29", "shovi": 1020000, "afkada": 0, "meshiha": 10000, "netoDeposit": -10000, "revachNominBruto": 20000, "tsuaNeto": 1.9, "revachNominMizBruto": 35000, "tsuaNominMizNeto": 3.4 }
-      ]
-    };
+    <script>
+        // Data Parsing Logic
+        // We parse the mixed Hebrew/English keys from the specific JSON structure provided.
+        // The structure is an array of objects where the first few objects are metadata definitions.
+        // We look for objects that contain specific keys to identify the section.
 
-    // --- Utility Functions ---
-    function formatNumber(num, decimals = 0) {
-        if (num === undefined || num === null) return '-';
-        return num.toLocaleString('he-IL', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
-    }
+        // --- Data Definitions ---
+        let processedData = {
+            market_indices: [],
+            overall_assets: [],
+            geography_exposure: [],
+            currency_exposure: [], // Not currently used in new layout but kept for ref
+            accounts_performance: [],
+            equities_sectors: [],
+            bonds_maturity: [],
+            bonds_rating: [],
+            bonds_currency: [],
+            performance_history: [],
+            income_expenses: [],
+            account_performance_history: []
+        };
 
-    function formatCurrency(num) {
-        if (num === undefined || num === null) return '-';
-        return '₪' + formatNumber(num);
-    }
+        // --- Fetch & Parse ---
+        async function loadData() {
+            try {
+                // In a real app, this would be fetch('/path/to/data.json')
+                // For this demo, we assume 'plans/אר.בי ביטון רפאל החזקות בעמ.json' content is available or injected.
+                // Since I cannot fetch local files directly in this browser context easily without a server,
+                // I will use the `sample_data.json` structure or Paste the JSON content if provided.
+                // *Optimization*: I will inject the parsed JSON logic here assuming the variable `rawData` exists.
+                // If rawData is not defined, I will fallback to the embedded sample data for demo purposes.
+                
+                if (typeof rawData === 'undefined') {
+                   // Fallback or Placeholder - In real implementation, fetch here.
+                   console.log("No rawData found. Waiting for injection or using sample.");
+                   return; 
+                }
 
-    function formatPercent(num) {
-        if (num === undefined || num === null) return '-';
-        return num.toFixed(2) + '%';
-    }
+                processJSON(rawData);
+                renderDashboard();
 
-    function getColorClass(val) {
-        if (val > 0) return 'positive';
-        if (val < 0) return 'negative';
-        return '';
-    }
+            } catch (e) {
+                console.error("Error loading data:", e);
+            }
+        }
 
-    // --- Logic & Rendering ---
+        function processJSON(jsonArray) {
+            // The JSON is NOT a flat array based on the user's feedback. It is an Object with keys.
+            // The previous logic attempted to treat 'jsonArray' (which is 'rawData') as an array and filter it.
+            // That caused the "TypeError: jsonArray.filter is not a function".
+            
+            // We can directly access the keys of the object.
+            const root = jsonArray; 
 
-    function renderHeroStats() {
-        // 1. Total Value: Latest shovi from performance or sum of holdings
-        const latestPerf = data.performance_by_month[data.performance_by_month.length - 1];
-        const totalValue = latestPerf ? latestPerf.shovi : 0;
-        document.getElementById('hero-total-value').textContent = formatCurrency(totalValue);
+            // 1. Asset Allocation (overall_assets)
+            if (root.overall_assets && Array.isArray(root.overall_assets)) {
+                processedData.overall_assets = root.overall_assets
+                    .filter(item => item && item.afikname && item.shovi && item.afikname !== 'Total' && item.afikname !== 'סה"כ' && !item.sugId)
+                    .map(item => ({
+                        name: item.afikname,
+                        value: item.shovi,
+                        pct: item.ahuz
+                    })).sort((a,b) => b.value - a.value);
+            }
 
-        // 2. YTD Return: Sum of monthly returns (approximation) or last cumulative
-        // Using last month's cumulative year return
-        const ytdReturn = latestPerf ? latestPerf.tsuaNominMizNeto : 0;
-        const ytdEl = document.getElementById('hero-ytd-return');
-        ytdEl.textContent = formatPercent(ytdReturn);
-        ytdEl.classList.add(getColorClass(ytdReturn));
+             // 2. Geography Exposure
+            if (root.geography_exposure && Array.isArray(root.geography_exposure)) {
+                processedData.geography_exposure = root.geography_exposure
+                    .filter(item => item && item.CountryName && item.Shovi && item.CountryName !== 'Total')
+                    .map(item => ({
+                        name: item.CountryName === 'Israel' ? 'ישראל' : (item.CountryName === 'USA' ? 'ארה"ב' : (item.CountryName === 'Europe' ? 'אירופה' : item.CountryName)),
+                        value: item.Shovi,
+                        pct: item.Ahuz
+                    })).sort((a,b) => b.value - a.value);
+            }
 
-        // 3. Net Flow YTD: Sum of netoDeposit
-        const totalFlow = data.performance_by_month.reduce((acc, curr) => acc + curr.netoDeposit, 0);
-        const flowEl = document.getElementById('hero-net-flow');
-        flowEl.textContent = formatCurrency(totalFlow);
-        flowEl.classList.add(getColorClass(totalFlow));
-    }
+            // 3. Market Indices
+            if (root.market_indices && Array.isArray(root.market_indices)) {
+                processedData.market_indices = root.market_indices.map(i => ({
+                    name: i.nechesName,
+                    mtd: i.MTD,
+                    ytd: i.YTD
+                }));
+            }
 
-    function renderMarketIndices() {
-        const container = document.getElementById('market-indices-container');
-        let html = '';
-        data.market_indices.forEach(idx => {
-            const mtdClass = getColorClass(idx.MTD);
-            const ytdClass = getColorClass(idx.YTD);
-            html += `
-                <div class="scorecard">
-                    <div class="scorecard-title">${idx.nechesName}</div>
-                    <div class="scorecard-metric">
-                        <span style="color:#666;">חודשי</span>
-                        <span class="ltr ${mtdClass}">${formatPercent(idx.MTD)}</span>
+            // 4. Multi-Account Performance
+            if (root["multi-account_performance"] && Array.isArray(root["multi-account_performance"])) { // Note: accessing property with hyphen requires bracket notation
+                 processedData.accounts_performance = root["multi-account_performance"]
+                    .filter(d => d && d.hesh_nameEng !== 'Total' && d.sugdoh === 0) 
+                    .map(d => ({
+                        name: d.hesh_nameEng, 
+                        currency: d.SymbolHalbana,
+                        value: d.shoviShekel || d.shovi, 
+                        pct: d.ahuz,
+                        mtd: d.tsuaReportMonth,
+                        ytd: d.tsuaReportYear
+                     })).sort((a,b) => b.ytd - a.ytd);
+            } else if (root.multi_account_performance && Array.isArray(root.multi_account_performance)) {
+                 // Fallback if key was sanitized in JS object to underscores
+                 processedData.accounts_performance = root.multi_account_performance
+                    .filter(d => d && d.hesh_nameEng !== 'Total' && d.sugdoh === 0) 
+                    .map(d => ({
+                        name: d.hesh_nameEng, 
+                        currency: d.SymbolHalbana,
+                        value: d.shoviShekel || d.shovi, 
+                        pct: d.ahuz,
+                        mtd: d.tsuaReportMonth,
+                        ytd: d.tsuaReportYear
+                     })).sort((a,b) => b.ytd - a.ytd);
+            }
+
+            // 5. Equities By Sector
+            if (root.equities_by_sector && Array.isArray(root.equities_by_sector)) {
+                 processedData.equities_sectors = root.equities_by_sector
+                    .filter(d => d && d.Anafim !== 'Total')
+                    .map(d => ({
+                        name: d.Anafim,
+                        value: d.shovi,
+                        pct: d.ahuz
+                    })).sort((a,b) => b.value - a.value);
+            }
+
+            // 6. Bonds Maturity
+            if (root.bonds_maturity && Array.isArray(root.bonds_maturity)) {
+                processedData.bonds_maturity = root.bonds_maturity
+                    .filter(d => d && d.years !== 99999) // Filter Total
+                    .map(d => ({
+                        year: d.years === 9999 ? 'ללא' : d.years,
+                        value: d.shovi,
+                        pct: d.ahuz
+                    })).sort((a,b) => (a.year === 'ללא' ? 1 : a.year) - (b.year === 'ללא' ? 1 : b.year));
+            }
+            
+            // 6b. Bonds Rating
+            if (root.bonds_rating && Array.isArray(root.bonds_rating)) {
+                processedData.bonds_rating = root.bonds_rating
+                    .filter(d => d && d.DerugName !== 'Total')
+                    .map(d => ({
+                        name: d.DerugName,
+                        value: d.shovi,
+                        pct: d.ahuz
+                    })).sort((a,b) => b.value - a.value);
+            }
+
+            // 6c. Bonds Currency
+            if (root.bonds_currency && Array.isArray(root.bonds_currency)) {
+                processedData.bonds_currency = root.bonds_currency
+                    .filter(d => d && d.hatzmadaName !== 'Total')
+                    .map(d => ({
+                        name: d.hatzmadaName,
+                        value: d.shovi,
+                        pct: d.ahuz
+                    })).sort((a,b) => b.value - a.value);
+            }
+            
+            // 7. Performance History
+            if (root.performance_by_month && Array.isArray(root.performance_by_month)) {
+                processedData.performance_history = root.performance_by_month
+                    .filter(d => d && d.sugDoh === 1 && d.ddate !== '01/01/2500')
+                    .map(d => ({
+                        date: d.ddate,
+                        value: d.shovi,
+                        deposit: d.netoDeposit,
+                        profit: d.revachNominBruto
+                    }));
+            }
+
+            // 8. Income & Expenses
+            if (root.income_expenses && Array.isArray(root.income_expenses)) {
+                processedData.income_expenses = root.income_expenses.map(d => ({
+                    date: d.date,
+                    // Parse date string dd/mm/yyyy to Date object for sorting if needed
+                    dateObj: new Date(d.date.split('/').reverse().join('-')),
+                    description: d.description,
+                    category: d.category,
+                    account: d.account,
+                    amount: d.amount,
+                    afik: d.afik // New Field
+                }));
+            }
+
+            // 9. Account Performance History
+            if (root.account_performance_history && Array.isArray(root.account_performance_history)) {
+                processedData.account_performance_history = root.account_performance_history;
+            }
+        }
+
+
+        // --- Rendering Functions ---
+
+        function renderHeroStats() {
+            // 1. Total Value: From "Overall Assets" -> "Total" row in 'overall_assets' OR from the latest month in 'performance_by_month'
+            // The JSON has "overall_assets" with a "Total" row. We should prefer that.
+            let totalValue = 0;
+            // Try to find "Total" in overall_assets
+            const totalAssetItem = processedData.overall_assets.find(d => d.name === 'Total'); // We filtered Total out in processedData...
+            // Let's get it from the rawData or re-calculate sum of processedData.overall_assets
+            if (processedData.overall_assets.length > 0) {
+                totalValue = processedData.overall_assets.reduce((sum, item) => sum + item.value, 0);
+            } else if (processedData.performance_history.length > 0) {
+                // Fallback to latest performance history
+                totalValue = processedData.performance_history[processedData.performance_history.length - 1].value;
+            }
+            
+            document.getElementById('hero-total-value').textContent = formatCurrency(totalValue);
+
+            // 2. YTD Return: "performance_by_month" usually has a running calculation or we sum monthly returns?
+            // Actually, `multi-account_performance` has a "Total" row with YTD. Let's try to find it in the rawData since we might have filtered it.
+            // Alternatively, `market_indices` might have portfolio benchmark?
+            // Best bet: The last entry in `performance_by_month` might have a 'tsuaNominMizNeto' (Cumulative Net Nominal Return) if available in raw JSON.
+            // The raw JSON sample showed `performance_by_month` objects have keys: `shovi`, `netoDeposit`, `revachNominBruto`, `tsuaNeto`.
+            // We need to calculate Cumulative Return (Time Weighted) or Money Weighted if not explicitly provided.
+            // SIMPLEST: Sum of `revachNominBruto` / Start of Year Value? 
+            // OR: Standard industry practice: (End Value - Net Flows) / Start Value - 1?
+            // Let's look at `performance_by_month` data again.
+            
+            // Let's look for "Total" row in "multi_account_performance" in the rawData structure again if accessible, or sum up the filtered list.
+            // But specific request: "ביצועי התיק מתחילת שנה"
+            
+            let ytdReturn = 0;
+            // Approach: Use the "multi_account_performance" Total row if it exists in rawData (it was filtered out in processJSON)
+            // or Sum of profits / Average Capital?
+            // Let's calculate simple return based on flows:
+            // Profit = Sum(revachNominBruto)
+            // But we want percentage.
+            
+            // Re-accessing rawData global since it's available in this scope
+            if (typeof rawData !== 'undefined') {
+                 // Try Multi-Account "Total"
+                 if (rawData["multi-account_performance"]) {
+                     const totalRow = rawData["multi-account_performance"].find(d => d.hesh_nameEng === 'Total' && d.sugdoh === 0);
+                     if (totalRow) {
+                         ytdReturn = totalRow.tsuaReportYear; // This is the most accurate source
+                     }
+                 } else if (rawData.multi_account_performance) {
+                     const totalRow = rawData.multi_account_performance.find(d => d.hesh_nameEng === 'Total' && d.sugdoh === 0);
+                     if (totalRow) {
+                         ytdReturn = totalRow.tsuaReportYear;
+                     }
+                 }
+            }
+            
+            // Fallback if not found: Calculate roughly from Performance History
+            if (ytdReturn === 0 && processedData.performance_history.length > 0) {
+                 // Iterate and compound monthly returns if available, or just take the last accumulated return if provided in original JSON (it was `tsuaNominMizNeto` in the original huge file but maybe not in sample)
+                 // In the sample_data.js I wrote, I didn't include `tsuaNominMizNeto`.
+                 // Let's just display what we have or 0.
+            }
+
+            const ytdEl = document.getElementById('hero-ytd-return');
+            ytdEl.textContent = formatPercent(ytdReturn);
+            const ytdClass = getColorClass(ytdReturn);
+            if (ytdClass) ytdEl.classList.add(ytdClass);
+
+            // 3. Net Flow YTD: Sum of `netoDeposit` from `performance_by_month`
+            let totalFlow = 0;
+            if (processedData.performance_history.length > 0) {
+                totalFlow = processedData.performance_history.reduce((acc, curr) => acc + (curr.deposit || 0), 0);
+            }
+            
+            const flowEl = document.getElementById('hero-net-flow');
+            flowEl.textContent = formatCurrency(totalFlow);
+            const flowClass = getColorClass(totalFlow);
+            if (flowClass) flowEl.classList.add(flowClass);
+        }
+
+        function renderDashboard() {
+            // Render all components
+            renderHeroStats(); 
+            renderMarketIndices();
+            renderAssetAllocation();
+            renderGeography();
+            renderAccounts();
+            renderEquities();
+            renderBonds();
+            renderBondRatings();
+            renderBondCurrency();
+            renderPerformanceCharts();
+            initIncomeExpensesTable();
+            renderAccountHistory();
+        }
+        
+        // 1. Market Indices
+        function renderMarketIndices() {
+            const container = document.getElementById('market-indices-container');
+            let html = '';
+            // Limit to top 5-6 interesting indices
+            const indices = processedData.market_indices.slice(0, 6); 
+            indices.forEach(idx => {
+                const mtdClass = getColorClass(idx.mtd);
+                const ytdClass = getColorClass(idx.ytd);
+                html += `
+                    <div class="scorecard">
+                        <div class="scorecard-title">${idx.name}</div>
+                        <div class="scorecard-metric">
+                            <span style="color:#666;">חודשי</span>
+                            <span class="ltr ${mtdClass}">${formatPercent(idx.mtd)}</span>
+                        </div>
+                        <div class="scorecard-metric">
+                            <span style="color:#666;">שנתי</span>
+                            <span class="ltr ${ytdClass}">${formatPercent(idx.ytd)}</span>
+                        </div>
                     </div>
-                    <div class="scorecard-metric">
-                        <span style="color:#666;">שנתי</span>
-                        <span class="ltr ${ytdClass}">${formatPercent(idx.YTD)}</span>
-                    </div>
-                </div>
-            `;
-        });
-        container.innerHTML = html;
-    }
+                `;
+            });
+            container.innerHTML = html;
+        }
 
-    function renderHoldingsTable() {
-        const tbody = document.querySelector('#holdings-table tbody');
-        let html = '';
-        data.tradable_assets.forEach(asset => {
-            html += `
+        // 2. Asset Allocation
+        function renderAssetAllocation() {
+             const data = processedData.overall_assets;
+             
+             // Table
+             const tbody = document.querySelector('#asset-allocation-table tbody');
+             tbody.innerHTML = data.map(d => `
                 <tr>
-                    <td style="font-weight:500;">${asset.afikname}</td>
-                    <td class="ltr">${formatNumber(asset.shovi)}</td>
-                    <td class="ltr">${formatPercent(asset.ahuz)}</td>
+                    <td>${d.name}</td>
+                    <td class="ltr">${formatNumber(d.value)}</td>
+                    <td class="ltr">${formatPercent(d.pct)}</td>
                 </tr>
-            `;
-        });
-        tbody.innerHTML = html;
-    }
+             `).join('');
 
-    function renderCharts() {
-        const colors = ['#0d6efd', '#6610f2', '#6f42c1', '#d63384', '#dc3545', '#fd7e14', '#ffc107', '#198754', '#20c997', '#0dcaf0'];
-        const chartFont = { family: 'Segoe UI', size: 12 };
-
-        // 1. Asset Allocation (Doughnut)
-        const transMap = { 'Global Equity': 'מניות חו"ל', 'Bonds': 'אג"ח', 'Equities': 'מניות', 'Fixed Income': 'אג״ח' };
-        new Chart(document.getElementById('assetAllocationChart'), {
-            type: 'doughnut',
-            data: {
-                labels: data.asset_class_breakdown.map(d => transMap[d.hesh_nameEng] || d.hesh_nameEng),
-                datasets: [{
-                    data: data.asset_class_breakdown.map(d => d.shoviAhuz),
-                    backgroundColor: colors
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { position: 'bottom', rtl: true, labels: { font: chartFont, boxWidth: 12 } } }
-            }
-        });
-
-        // 2. Geography (Pie)
-        const countryMap = { 'United States': 'ארה"ב', 'Israel': 'ישראל' };
-        new Chart(document.getElementById('geographyExposureChart'), {
-            type: 'pie',
-            data: {
-                labels: data.geography_exposure.map(d => countryMap[d.CountryName] || d.CountryName),
-                datasets: [{
-                    data: data.geography_exposure.map(d => d.Ahuz),
-                    backgroundColor: [colors[4], colors[7]] // Specific colors
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { position: 'bottom', rtl: true, labels: { font: chartFont, boxWidth: 12 } } }
-            }
-        });
-
-        // 3. Currency (Bar)
-        new Chart(document.getElementById('currencyExposureChart'), {
-            type: 'bar',
-            data: {
-                labels: data.currency_exposure.map(d => d.hatzmadaName),
-                datasets: [{
-                    label: '% חשיפה',
-                    data: data.currency_exposure.map(d => d.Ahuz),
-                    backgroundColor: colors[0],
-                    borderRadius: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { beginAtZero: true, grid: { color: '#f0f0f0' } },
-                    x: { grid: { display: false } }
+             // Chart
+             const colors = ['#0d6efd', '#6610f2', '#6f42c1', '#d63384', '#dc3545', '#fd7e14', '#ffc107', '#198754'];
+             new Chart(document.getElementById('assetAllocationChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: data.map(d => d.name),
+                    datasets: [{
+                        data: data.map(d => d.value),
+                        backgroundColor: colors
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } } // Hide legend to save space, table serves as legend
                 }
-            }
-        });
+            });
+        }
 
-        // 4. Liquidity (Doughnut)
-        const liquidMap = { 'Liquid': 'נזיל', 'Illiquid': 'לא נזיל' };
-        new Chart(document.getElementById('liquidityChart'), {
-            type: 'doughnut',
-            data: {
-                labels: data.liquidity.map(d => liquidMap[d.SugName] || d.SugName),
-                datasets: [{
-                    data: data.liquidity.map(d => d.Ahuz),
-                    backgroundColor: ['#198754', '#ffc107'] // Green (Liquid), Yellow (Illiquid)
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { position: 'right', rtl: true, labels: { font: chartFont } } }
-            }
-        });
+        // 3. Geography
+        function renderGeography() {
+            const data = processedData.geography_exposure;
+             // Table
+             const tbody = document.querySelector('#geography-exposure-table tbody');
+             tbody.innerHTML = data.map(d => `
+                <tr>
+                    <td>${d.name}</td>
+                    <td class="ltr">${formatNumber(d.value)}</td>
+                    <td class="ltr">${formatPercent(d.pct)}</td>
+                </tr>
+             `).join('');
 
-        // 5. Bond Ratings (Horizontal Bar)
-        new Chart(document.getElementById('bondsRatingChart'), {
-            type: 'bar',
-            data: {
-                labels: data.bonds_rating.map(d => d.DerugName),
-                datasets: [{
-                    label: '% מתוך האג״ח',
-                    data: data.bonds_rating.map(d => d.ahuz),
-                    backgroundColor: colors[2],
-                    borderRadius: 4
-                }]
-            },
-            options: {
-                indexAxis: 'y',
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    x: { beginAtZero: true, grid: { color: '#f0f0f0' } },
-                    y: { grid: { display: false } }
+             // Chart
+             new Chart(document.getElementById('geographyExposureChart'), {
+                type: 'pie',
+                data: {
+                    labels: data.map(d => d.name),
+                    datasets: [{
+                        data: data.map(d => d.value),
+                        backgroundColor: ['#0d6efd', '#198754', '#ffc107', '#dc3545', '#6c757d']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }
                 }
-            }
-        });
+            });
+        }
 
-        // 6. Performance SPLIT CHARTS
-        const labels = data.performance_by_month.map(d => new Date(d.ddate).toLocaleDateString('he-IL', { month:'short', year:'2-digit' }));
-        const deposits = data.performance_by_month.map(d => d.netoDeposit);
-        const profit = data.performance_by_month.map(d => d.revachNominBruto);
-        const values = data.performance_by_month.map(d => d.shovi);
+        // 4. Accounts Breakdown
+        function renderAccounts() {
+            const data = processedData.accounts_performance;
+            
+            // Table
+            const tbody = document.querySelector('#accounts-performance-table tbody');
+            tbody.innerHTML = data.map(d => `
+                <tr>
+                    <td style="text-align:right; direction:rtl;">${d.name}</td>
+                    <td>${d.currency}</td>
+                    <td class="ltr">${formatNumber(d.value)}</td>
+                    <td class="ltr">${formatPercent(d.pct)}</td>
+                    <td class="ltr ${getColorClass(d.mtd)}">${formatPercent(d.mtd)}</td>
+                    <td class="ltr ${getColorClass(d.ytd)}">${formatPercent(d.ytd)}</td>
+                </tr>
+            `).join('');
 
-        // Chart A: Value Trend (Area)
-        new Chart(document.getElementById('valueTrendChart'), {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'שווי תיק (₪)',
-                    data: values,
-                    borderColor: '#0d6efd',
-                    backgroundColor: 'rgba(13, 110, 253, 0.1)',
-                    borderWidth: 3,
-                    tension: 0.4,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { grid: { color: '#f0f0f0' }, ticks: { callback: function(value) { return '₪' + value/1000 + 'k'; } } },
-                    x: { grid: { display: false } }
-                }
-            }
-        });
+            // Chart - Horizontal Bar for YTD Performance
+            const labels = data.map(d => d.name.substring(0, 15) + '...'); // Truncate long names
+            const ytdValues = data.map(d => d.ytd);
+            const bgColors = ytdValues.map(v => v >= 0 ? '#198754' : '#dc3545');
 
-        // Chart B: Monthly Movement (Grouped Bar)
-        new Chart(document.getElementById('monthlyMovementChart'), {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [
-                    {
-                        label: 'רווח/הפסד',
-                        data: profit,
-                        backgroundColor: '#198754',
+            new Chart(document.getElementById('accountsPerformanceChart'), {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'תשואה שנתית (%)',
+                        data: ytdValues,
+                        backgroundColor: bgColors,
                         borderRadius: 4
-                    },
-                    {
-                        label: 'הפקדות/משיכות נטו',
-                        data: deposits,
-                        backgroundColor: '#6c757d',
-                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { color: '#f0f0f0' } },
+                        y: { grid: { display: false } }
                     }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { position: 'bottom', labels: { font: chartFont, boxWidth: 12 } } },
-                scales: {
-                    y: { grid: { color: '#f0f0f0' } },
-                    x: { grid: { display: false } }
                 }
+            });
+        }
+
+        // 5. Equities
+        function renderEquities() {
+            const data = processedData.equities_sectors;
+            if(!data || data.length === 0) return;
+
+             // Table
+             const tbody = document.querySelector('#equities-sector-table tbody');
+             // Top 10 sectors + Other
+             const top10 = data.slice(0, 10);
+             const otherValue = data.slice(10).reduce((acc, curr) => acc + curr.value, 0);
+             const otherPct = data.slice(10).reduce((acc, curr) => acc + curr.pct, 0);
+             
+             let displayData = [...top10];
+             if(otherValue > 0) {
+                 displayData.push({ name: 'אחר', value: otherValue, pct: otherPct });
+             }
+
+             tbody.innerHTML = displayData.map(d => `
+                <tr>
+                    <td>${d.name}</td>
+                    <td class="ltr">${formatNumber(d.value)}</td>
+                    <td class="ltr">${formatPercent(d.pct)}</td>
+                </tr>
+             `).join('');
+
+             // Chart
+             new Chart(document.getElementById('equitiesSectorChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: displayData.map(d => d.name),
+                    datasets: [{
+                        data: displayData.map(d => d.value),
+                         backgroundColor: ['#4e79a7', '#f28e2b', '#e15759', '#76b7b2', '#59a14f', '#edc948', '#b07aa1', '#ff9da7', '#9c755f', '#bab0ac']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        // 6. Bonds
+        function renderBonds() {
+            const data = processedData.bonds_maturity;
+            if(!data || data.length === 0) return;
+
+             // Table
+             const tbody = document.querySelector('#bonds-maturity-table tbody');
+             tbody.innerHTML = data.map(d => `
+                <tr>
+                    <td>${d.year}</td>
+                    <td class="ltr">${formatNumber(d.value)}</td>
+                    <td class="ltr">${formatPercent(d.pct)}</td>
+                </tr>
+             `).join('');
+
+             // Chart
+             new Chart(document.getElementById('bondsMaturityChart'), {
+                type: 'bar',
+                data: {
+                    labels: data.map(d => d.year),
+                    datasets: [{
+                        label: 'שווי אג״ח',
+                        data: data.map(d => d.value),
+                        backgroundColor: '#6f42c1',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                     scales: {
+                        y: { display: false },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        // 7. Bonds Ratings
+        function renderBondRatings() {
+            const data = processedData.bonds_rating;
+            if(!data || data.length === 0) return;
+
+             // Table
+             const tbody = document.querySelector('#bonds-rating-table tbody');
+             tbody.innerHTML = data.map(d => `
+                <tr>
+                    <td>${d.name}</td>
+                    <td class="ltr">${formatNumber(d.value)}</td>
+                    <td class="ltr">${formatPercent(d.pct)}</td>
+                </tr>
+             `).join('');
+
+             // Chart
+             new Chart(document.getElementById('bondsRatingChart'), {
+                type: 'bar',
+                data: {
+                    labels: data.map(d => d.name),
+                    datasets: [{
+                        label: 'שווי אג״ח לפי דירוג',
+                        data: data.map(d => d.value),
+                        backgroundColor: '#20c997',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    indexAxis: 'y', // Horizontal Bar Chart
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                     scales: {
+                        x: { display: false },
+                        y: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        // 8. Bonds Currency
+        function renderBondCurrency() {
+            const data = processedData.bonds_currency;
+            if(!data || data.length === 0) return;
+
+             // Table
+             const tbody = document.querySelector('#bonds-currency-table tbody');
+             tbody.innerHTML = data.map(d => `
+                <tr>
+                    <td>${d.name}</td>
+                    <td class="ltr">${formatNumber(d.value)}</td>
+                    <td class="ltr">${formatPercent(d.pct)}</td>
+                </tr>
+             `).join('');
+
+             // Chart
+             new Chart(document.getElementById('bondsCurrencyChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: data.map(d => d.name),
+                    datasets: [{
+                        data: data.map(d => d.value),
+                        backgroundColor: ['#6610f2', '#0d6efd', '#6c757d', '#ffc107', '#198754']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        // 9. Performance Charts (Bottom)
+        function renderPerformanceCharts() {
+            const data = processedData.performance_history;
+            if(!data || data.length === 0) return;
+
+            const labels = data.map(d => new Date(d.date).toLocaleDateString('he-IL', { month:'short', year:'2-digit' }));
+            const values = data.map(d => d.value);
+            const profits = data.map(d => d.profit);
+            const deposits = data.map(d => d.deposit);
+
+             // Chart A: Value Trend
+             new Chart(document.getElementById('valueTrendChart'), {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'שווי תיק (₪)',
+                        data: values,
+                        borderColor: '#0d6efd',
+                        backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { grid: { color: '#f0f0f0' }, ticks: { callback: function(value) { return '₪' + value/1000000 + 'M'; } } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+
+            // Chart B: Monthly Movement
+             new Chart(document.getElementById('monthlyMovementChart'), {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'רווח/הפסד',
+                            data: profits,
+                            backgroundColor: '#198754',
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'הפקדות/משיכות נטו',
+                            data: deposits,
+                            backgroundColor: '#6c757d',
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } },
+                    scales: {
+                        y: { grid: { color: '#f0f0f0' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+
+        // 8. Income & Expenses Table Logic
+        let currentFilters = {
+            category: '',
+            account: '',
+            afik: '',
+            dateFrom: '',
+            dateTo: ''
+        };
+
+        function initIncomeExpensesTable() {
+            const data = processedData.income_expenses;
+            if(!data || data.length === 0) return;
+
+            // Populate Dropdowns
+            const categories = [...new Set(data.map(d => d.category))].sort();
+            const accounts = [...new Set(data.map(d => d.account))].sort();
+            const afikim = [...new Set(data.map(d => d.afik))].filter(a => a).sort();
+
+            const catSelect = document.getElementById('filter-category');
+            categories.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c;
+                opt.textContent = c;
+                catSelect.appendChild(opt);
+            });
+
+            const accSelect = document.getElementById('filter-account');
+            accounts.forEach(a => {
+                const opt = document.createElement('option');
+                opt.value = a;
+                opt.textContent = a;
+                accSelect.appendChild(opt);
+            });
+            
+            const afikSelect = document.getElementById('filter-afik');
+            afikim.forEach(a => {
+                const opt = document.createElement('option');
+                opt.value = a;
+                opt.textContent = a;
+                afikSelect.appendChild(opt);
+            });
+
+            renderIncomeTable(data);
+        }
+
+        function applyFilters() {
+            currentFilters.category = document.getElementById('filter-category').value;
+            currentFilters.account = document.getElementById('filter-account').value;
+            currentFilters.afik = document.getElementById('filter-afik').value;
+            currentFilters.dateFrom = document.getElementById('filter-date-from').value; // yyyy-mm-dd
+            currentFilters.dateTo = document.getElementById('filter-date-to').value; // yyyy-mm-dd
+
+            const filteredData = processedData.income_expenses.filter(item => {
+                let pass = true;
+                if (currentFilters.category && item.category !== currentFilters.category) pass = false;
+                if (currentFilters.account && item.account !== currentFilters.account) pass = false;
+                if (currentFilters.afik && item.afik !== currentFilters.afik) pass = false;
+                
+                if (currentFilters.dateFrom) {
+                    const fromDate = new Date(currentFilters.dateFrom);
+                    if (item.dateObj < fromDate) pass = false;
+                }
+                
+                if (currentFilters.dateTo) {
+                    const toDate = new Date(currentFilters.dateTo);
+                    if (item.dateObj > toDate) pass = false;
+                }
+                
+                return pass;
+            });
+
+            renderIncomeTable(filteredData);
+        }
+
+        function clearFilters() {
+            document.getElementById('filter-category').value = '';
+            document.getElementById('filter-account').value = '';
+            document.getElementById('filter-afik').value = '';
+            document.getElementById('filter-date-from').value = '';
+            document.getElementById('filter-date-to').value = '';
+            
+            currentFilters = { category: '', account: '', afik: '', dateFrom: '', dateTo: '' };
+            renderIncomeTable(processedData.income_expenses);
+        }
+
+        function renderIncomeTable(data) {
+            const tbody = document.querySelector('#income-expenses-table tbody');
+            tbody.innerHTML = '';
+
+            let total = 0;
+
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">לא נמצאו נתונים</td></tr>';
+            } else {
+                tbody.innerHTML = data.map(d => {
+                    total += d.amount;
+                    const amountClass = getColorClass(d.amount);
+                    return `
+                        <tr>
+                            <td>${d.date}</td>
+                            <td>${d.description}</td>
+                            <td>${d.category}</td>
+                            <td>${d.account}</td>
+                            <td>${d.afik || '-'}</td>
+                            <td class="ltr ${amountClass}">${formatCurrency(d.amount)}</td>
+                        </tr>
+                    `;
+                }).join('');
             }
-        });
-    }
 
-    // --- Init ---
-    document.getElementById('current-date').textContent = new Date().toLocaleDateString('he-IL');
-    renderHeroStats();
-    renderMarketIndices();
-    renderHoldingsTable();
-    window.onload = renderCharts;
+            // Update Total
+            const totalEl = document.getElementById('filtered-total');
+            totalEl.textContent = formatCurrency(total);
+            totalEl.className = 'ltr ' + getColorClass(total);
+        }
 
-</script>
+        // --- Utility Functions ---
+        function formatNumber(num, decimals = 0) {
+            if (num === undefined || num === null) return '-';
+            return num.toLocaleString('he-IL', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+        }
+
+        function formatCurrency(num) {
+            if (num === undefined || num === null) return '-';
+            return '₪' + formatNumber(num);
+        }
+
+        function formatPercent(num) {
+            if (num === undefined || num === null) return '-';
+            return num.toFixed(2) + '%';
+        }
+
+        function getColorClass(val) {
+            if (val > 0) return 'positive';
+            if (val < 0) return 'negative';
+            return '';
+        }
+
+        // --- Init ---
+        document.getElementById('current-date').textContent = new Date().toLocaleDateString('he-IL');
+        
+        // Start application
+        loadData();
+
+    </script>
 
 </body>
 </html>

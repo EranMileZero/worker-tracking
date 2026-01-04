@@ -140,4 +140,26 @@ export interface PortfolioData {
   equities_by_country: EquitiesByCountry[];
   equities_by_sector: EquitiesBySector[];
   equities_by_currency: EquitiesByCurrency[];
+  income_expenses: IncomeExpense[];
+  account_performance_history: AccountPerformanceHistory[];
+}
+
+export interface IncomeExpense {
+  date: string;
+  description: string;
+  category: string;
+  amount: number;
+  account: string;
+  afik: string;
+}
+
+export interface AccountPerformanceHistory {
+  heshid: string | number;
+  hesh_nameEng: string;
+  history: MonthlyReturn[];
+}
+
+export interface MonthlyReturn {
+  month: number;
+  return_pct: number;
 }
