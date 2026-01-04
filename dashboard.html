@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>דוח תיק השקעות</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #f0f2f5;
+            --text-color: #1a1d21;
+            --card-bg: #ffffff;
+            --primary-color: #0d6efd;
+            --secondary-color: #6c757d;
+            --border-color: #dee2e6;
+            --positive-color: #198754;
+            --negative-color: #dc3545;
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 30px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding-bottom: 50px;
+        }
+
+        /* Header & Hero */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .hero-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid rgba(0,0,0,0.05);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background-color: var(--primary-color);
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: var(--secondary-color);
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: 700;
+            color: var(--primary-color);
+            direction: ltr; /* Ensure numbers format correctly */
+            text-align: right;
+        }
+
+        .stat-subtext {
+            font-size: 0.85em;
+            color: var(--secondary-color);
+            margin-top: 5px;
+        }
+
+        /* Grid Layout */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 24px;
+            align-items: stretch;
+        }
+
+        .col-4 { grid-column: span 4; }
+        .col-6 { grid-column: span 6; }
+        .col-8 { grid-column: span 8; }
+        .col-12 { grid-column: span 12; }
+
+        @media (max-width: 1024px) {
+            .col-4, .col-8 { grid-column: span 6; }
+        }
+        
+        @media (max-width: 768px) {
+            .col-4, .col-6, .col-8 { grid-column: span 12; }
+        }
+
+        /* Cards */
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: var(--shadow-sm);
+            padding: 24px;
+            height: 100%; /* Important for grid alignment */
+            display: flex;
+            flex-direction: column;
+            min-height: 400px; /* Minimum height ensures charts have space */
+            box-sizing: border-box;
+        }
+        
+        .card.auto-height {
+            min-height: auto;
+            height: auto;
+        }
+
+        h2 {
+            font-size: 1.1rem;
+            color: var(--text-color);
+            margin: 0 0 20px 0;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Scorecards */
+        .scorecard-container {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .scorecard {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            flex: 1;
+            min-width: 200px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .scorecard-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 1em;
+        }
+
+        .scorecard-metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85em;
+            margin-top: 4px;
+        }
+
+        /* Charts */
+        .chart-container {
+            position: relative;
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            min-height: 300px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        /* Tables */
+        .table-container {
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9em;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: right;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: var(--secondary-color);
+            white-space: nowrap;
+        }
+
+        /* Utilities */
+        .positive { color: var(--positive-color); font-weight: 600; }
+        .negative { color: var(--negative-color); font-weight: 600; }
+        .ltr { direction: ltr; display: inline-block; }
+        
+        .badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            background: #e9ecef;
+            color: #495057;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div>
+            <h1 style="margin:0; font-size:1.8em;">דוח תיק השקעות</h1>
+            <div style="color:var(--secondary-color); margin-top:5px;">תאריך נתונים: <span id="current-date"></span></div>
+        </div>
+        <div style="text-align:left;">
+            <div class="badge">לקוח מועדף</div>
+        </div>
+    </header>
+
+    <!-- Hero Stats -->
+    <div class="hero-row">
+        <div class="stat-card">
+            <div class="stat-label">שווי תיק כולל</div>
+            <div class="stat-value" id="hero-total-value">-</div>
+            <div class="stat-subtext">סה״כ נכסים</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">תשואה מצטברת (שנתית)</div>
+            <div class="stat-value ltr" id="hero-ytd-return">-</div>
+            <div class="stat-subtext">ביצועי התיק מתחילת שנה</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">תנועות נטו (שנתי)</div>
+            <div class="stat-value ltr" id="hero-net-flow">-</div>
+            <div class="stat-subtext">הפקדות בניכוי משיכות</div>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        
+        <!-- Market Context -->
+        <div class="card col-12" style="height: auto;">
+            <h2 style="border:none; margin:0 0 10px 0;">מדדי שוק (בנצ׳מארק)</h2>
+            <div class="scorecard-container" id="market-indices-container"></div>
+        </div>
+
+        <!-- Strategy Row 1 -->
+        <div class="card col-4">
+            <h2>אפיקי השקעה</h2>
+            <div class="chart-container">
+                <canvas id="assetAllocationChart"></canvas>
+            </div>
+        </div>
+
+        <div class="card col-4">
+            <h2>חשיפה גיאוגרפית</h2>
+            <div class="chart-container">
+                <canvas id="geographyExposureChart"></canvas>
+            </div>
+        </div>
+
+        <div class="card col-4">
+            <h2>חשיפה למטבעות</h2>
+            <div class="chart-container">
+                <canvas id="currencyExposureChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Strategy Row 2 -->
+        <div class="card col-6">
+            <h2>נזילות (Liquid vs Illiquid)</h2>
+            <div class="chart-container">
+                <canvas id="liquidityChart"></canvas>
+            </div>
+        </div>
+
+        <div class="card col-6">
+            <h2>דירוג אג״ח</h2>
+            <div class="chart-container">
+                <canvas id="bondsRatingChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Advanced Performance Analysis - REVISED SPLIT VIEW -->
+        <div class="card col-12" style="min-height: auto;">
+            <h2 style="border:none; margin:0 0 10px 0;">ניתוח ביצועים ותנועות</h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; height: 350px;">
+                <!-- Chart 1: Value Trend -->
+                <div style="display: flex; flex-direction: column;">
+                    <h3 style="font-size: 0.9em; color: var(--secondary-color); margin: 0 0 10px 0;">שווי תיק (מגמה)</h3>
+                    <div class="chart-container">
+                        <canvas id="valueTrendChart"></canvas>
+                    </div>
+                </div>
+                <!-- Chart 2: Monthly Breakdown -->
+                <div style="display: flex; flex-direction: column;">
+                    <h3 style="font-size: 0.9em; color: var(--secondary-color); margin: 0 0 10px 0;">תנועות חודשיות (רווח vs הפקדות)</h3>
+                    <div class="chart-container">
+                        <canvas id="monthlyMovementChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Holdings -->
+        <div class="card col-12">
+            <h2>אחזקות עיקריות</h2>
+            <div class="table-container">
+                <table id="holdings-table">
+                    <thead>
+                        <tr>
+                            <th>שם נייר הערך</th>
+                            <th>שווי שוק (₪)</th>
+                            <th>% מהתיק</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // Embedded Sample Data
+    const data = {
+      "market_indices": [
+        { "nechesId": "1", "nechesName": "S&P 500", "SymbolHalbana": "$", "MTD": 1.2, "YTD": 5.4 },
+        { "nechesId": "2", "nechesName": "TA 35", "SymbolHalbana": "₪", "MTD": -0.5, "YTD": 2.1 },
+        { "nechesId": "3", "nechesName": "NASDAQ", "SymbolHalbana": "$", "MTD": 2.1, "YTD": 8.3 }
+      ],
+      "tradable_assets": [
+        { "afikname": "Apple Inc.", "shovi": 150000, "ahuz": 15, "sort": 1 },
+        { "afikname": "Microsoft Corp.", "shovi": 120000, "ahuz": 12, "sort": 2 },
+        { "afikname": "Government Bond IL", "shovi": 300000, "ahuz": 30, "sort": 3 }
+      ],
+      "currency_exposure": [
+        { "hatzmadaid": "1", "hatzmadaName": "USD", "Shovi": 450000, "Ahuz": 45 },
+        { "hatzmadaid": "2", "hatzmadaName": "ILS", "Shovi": 550000, "Ahuz": 55 }
+      ],
+      "geography_exposure": [
+        { "CountryName": "United States", "Shovi": 600000, "Ahuz": 60 },
+        { "CountryName": "Israel", "Shovi": 400000, "Ahuz": 40 }
+      ],
+      "asset_class_breakdown": [
+        { "sugId": "1", "afikid": "10", "heshid": "100", "afikname": "Equities", "hesh_nameEng": "Global Equity", "shoviAhuz": 40 },
+        { "sugId": "2", "afikid": "20", "heshid": "200", "afikname": "Fixed Income", "hesh_nameEng": "Bonds", "shoviAhuz": 50 }
+      ],
+      "liquidity": [
+        { "SugName": "Liquid", "Shovi": 800000, "Ahuz": 80 },
+        { "SugName": "Illiquid", "Shovi": 200000, "Ahuz": 20 }
+      ],
+      "bonds_rating": [
+        { "DerugName": "AAA", "shovi": 200000, "ahuz": 40 },
+        { "DerugName": "AA", "shovi": 150000, "ahuz": 30 }
+      ],
+      "performance_by_month": [
+        { "sugDoh": "Monthly", "ddate": "2024-01-31", "shovi": 1000000, "afkada": 50000, "meshiha": 0, "netoDeposit": 50000, "revachNominBruto": 15000, "tsuaNeto": 1.5, "revachNominMizBruto": 15000, "tsuaNominMizNeto": 1.5 },
+        { "sugDoh": "Monthly", "ddate": "2024-02-29", "shovi": 1020000, "afkada": 0, "meshiha": 10000, "netoDeposit": -10000, "revachNominBruto": 20000, "tsuaNeto": 1.9, "revachNominMizBruto": 35000, "tsuaNominMizNeto": 3.4 }
+      ]
+    };
+
+    // --- Utility Functions ---
+    function formatNumber(num, decimals = 0) {
+        if (num === undefined || num === null) return '-';
+        return num.toLocaleString('he-IL', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+    }
+
+    function formatCurrency(num) {
+        if (num === undefined || num === null) return '-';
+        return '₪' + formatNumber(num);
+    }
+
+    function formatPercent(num) {
+        if (num === undefined || num === null) return '-';
+        return num.toFixed(2) + '%';
+    }
+
+    function getColorClass(val) {
+        if (val > 0) return 'positive';
+        if (val < 0) return 'negative';
+        return '';
+    }
+
+    // --- Logic & Rendering ---
+
+    function renderHeroStats() {
+        // 1. Total Value: Latest shovi from performance or sum of holdings
+        const latestPerf = data.performance_by_month[data.performance_by_month.length - 1];
+        const totalValue = latestPerf ? latestPerf.shovi : 0;
+        document.getElementById('hero-total-value').textContent = formatCurrency(totalValue);
+
+        // 2. YTD Return: Sum of monthly returns (approximation) or last cumulative
+        // Using last month's cumulative year return
+        const ytdReturn = latestPerf ? latestPerf.tsuaNominMizNeto : 0;
+        const ytdEl = document.getElementById('hero-ytd-return');
+        ytdEl.textContent = formatPercent(ytdReturn);
+        ytdEl.classList.add(getColorClass(ytdReturn));
+
+        // 3. Net Flow YTD: Sum of netoDeposit
+        const totalFlow = data.performance_by_month.reduce((acc, curr) => acc + curr.netoDeposit, 0);
+        const flowEl = document.getElementById('hero-net-flow');
+        flowEl.textContent = formatCurrency(totalFlow);
+        flowEl.classList.add(getColorClass(totalFlow));
+    }
+
+    function renderMarketIndices() {
+        const container = document.getElementById('market-indices-container');
+        let html = '';
+        data.market_indices.forEach(idx => {
+            const mtdClass = getColorClass(idx.MTD);
+            const ytdClass = getColorClass(idx.YTD);
+            html += `
+                <div class="scorecard">
+                    <div class="scorecard-title">${idx.nechesName}</div>
+                    <div class="scorecard-metric">
+                        <span style="color:#666;">חודשי</span>
+                        <span class="ltr ${mtdClass}">${formatPercent(idx.MTD)}</span>
+                    </div>
+                    <div class="scorecard-metric">
+                        <span style="color:#666;">שנתי</span>
+                        <span class="ltr ${ytdClass}">${formatPercent(idx.YTD)}</span>
+                    </div>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    }
+
+    function renderHoldingsTable() {
+        const tbody = document.querySelector('#holdings-table tbody');
+        let html = '';
+        data.tradable_assets.forEach(asset => {
+            html += `
+                <tr>
+                    <td style="font-weight:500;">${asset.afikname}</td>
+                    <td class="ltr">${formatNumber(asset.shovi)}</td>
+                    <td class="ltr">${formatPercent(asset.ahuz)}</td>
+                </tr>
+            `;
+        });
+        tbody.innerHTML = html;
+    }
+
+    function renderCharts() {
+        const colors = ['#0d6efd', '#6610f2', '#6f42c1', '#d63384', '#dc3545', '#fd7e14', '#ffc107', '#198754', '#20c997', '#0dcaf0'];
+        const chartFont = { family: 'Segoe UI', size: 12 };
+
+        // 1. Asset Allocation (Doughnut)
+        const transMap = { 'Global Equity': 'מניות חו"ל', 'Bonds': 'אג"ח', 'Equities': 'מניות', 'Fixed Income': 'אג״ח' };
+        new Chart(document.getElementById('assetAllocationChart'), {
+            type: 'doughnut',
+            data: {
+                labels: data.asset_class_breakdown.map(d => transMap[d.hesh_nameEng] || d.hesh_nameEng),
+                datasets: [{
+                    data: data.asset_class_breakdown.map(d => d.shoviAhuz),
+                    backgroundColor: colors
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom', rtl: true, labels: { font: chartFont, boxWidth: 12 } } }
+            }
+        });
+
+        // 2. Geography (Pie)
+        const countryMap = { 'United States': 'ארה"ב', 'Israel': 'ישראל' };
+        new Chart(document.getElementById('geographyExposureChart'), {
+            type: 'pie',
+            data: {
+                labels: data.geography_exposure.map(d => countryMap[d.CountryName] || d.CountryName),
+                datasets: [{
+                    data: data.geography_exposure.map(d => d.Ahuz),
+                    backgroundColor: [colors[4], colors[7]] // Specific colors
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom', rtl: true, labels: { font: chartFont, boxWidth: 12 } } }
+            }
+        });
+
+        // 3. Currency (Bar)
+        new Chart(document.getElementById('currencyExposureChart'), {
+            type: 'bar',
+            data: {
+                labels: data.currency_exposure.map(d => d.hatzmadaName),
+                datasets: [{
+                    label: '% חשיפה',
+                    data: data.currency_exposure.map(d => d.Ahuz),
+                    backgroundColor: colors[0],
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: '#f0f0f0' } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+
+        // 4. Liquidity (Doughnut)
+        const liquidMap = { 'Liquid': 'נזיל', 'Illiquid': 'לא נזיל' };
+        new Chart(document.getElementById('liquidityChart'), {
+            type: 'doughnut',
+            data: {
+                labels: data.liquidity.map(d => liquidMap[d.SugName] || d.SugName),
+                datasets: [{
+                    data: data.liquidity.map(d => d.Ahuz),
+                    backgroundColor: ['#198754', '#ffc107'] // Green (Liquid), Yellow (Illiquid)
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'right', rtl: true, labels: { font: chartFont } } }
+            }
+        });
+
+        // 5. Bond Ratings (Horizontal Bar)
+        new Chart(document.getElementById('bondsRatingChart'), {
+            type: 'bar',
+            data: {
+                labels: data.bonds_rating.map(d => d.DerugName),
+                datasets: [{
+                    label: '% מתוך האג״ח',
+                    data: data.bonds_rating.map(d => d.ahuz),
+                    backgroundColor: colors[2],
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { beginAtZero: true, grid: { color: '#f0f0f0' } },
+                    y: { grid: { display: false } }
+                }
+            }
+        });
+
+        // 6. Performance SPLIT CHARTS
+        const labels = data.performance_by_month.map(d => new Date(d.ddate).toLocaleDateString('he-IL', { month:'short', year:'2-digit' }));
+        const deposits = data.performance_by_month.map(d => d.netoDeposit);
+        const profit = data.performance_by_month.map(d => d.revachNominBruto);
+        const values = data.performance_by_month.map(d => d.shovi);
+
+        // Chart A: Value Trend (Area)
+        new Chart(document.getElementById('valueTrendChart'), {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'שווי תיק (₪)',
+                    data: values,
+                    borderColor: '#0d6efd',
+                    backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { grid: { color: '#f0f0f0' }, ticks: { callback: function(value) { return '₪' + value/1000 + 'k'; } } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+
+        // Chart B: Monthly Movement (Grouped Bar)
+        new Chart(document.getElementById('monthlyMovementChart'), {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'רווח/הפסד',
+                        data: profit,
+                        backgroundColor: '#198754',
+                        borderRadius: 4
+                    },
+                    {
+                        label: 'הפקדות/משיכות נטו',
+                        data: deposits,
+                        backgroundColor: '#6c757d',
+                        borderRadius: 4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom', labels: { font: chartFont, boxWidth: 12 } } },
+                scales: {
+                    y: { grid: { color: '#f0f0f0' } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    }
+
+    // --- Init ---
+    document.getElementById('current-date').textContent = new Date().toLocaleDateString('he-IL');
+    renderHeroStats();
+    renderMarketIndices();
+    renderHoldingsTable();
+    window.onload = renderCharts;
+
+</script>
+
+</body>
+</html>
