@@ -420,6 +420,7 @@
             account_performance_history: [],
             financial_assets: [],
             account_exposure: [],
+            accountMovementsReport: []
         };
 
         // --- Fetch & Parse ---
@@ -597,6 +598,18 @@
                     account: d.account,
                     asset_class: d.asset_class,
                     shovi: d.shovi
+                }));
+            }
+            if (r.accountMovementsReport && Array.isArray(r.accountMovementsReport)) {
+                processedData.accountMovementsReport = r.accountMovementsReport.map(d => ({
+                    accountName: d.accountName,
+                    tradeDate: d.tradeDate,
+                    settlementDate: d.settlementDate,
+                    securityName: d.securityName,
+                    transactionType: d.transactionType,
+                    quantity: String(d.quantity).replace(/,/g, ''), // remove commas and ensure string
+                    price: String(d.price).replace(/,/g, ''), // remove commas and ensure string
+                    amount: String(d.amount3).replace(/,/g, '') // remove commas and ensure string
                 }));
             }
         }
@@ -1162,13 +1175,13 @@
         };
 
         function initIncomeExpensesTable() {
-            const data = processedData.income_expenses;
+            const data = processedData.accountMovementsReport;
             if(!data || data.length === 0) return;
 
             // Populate Dropdowns
-            const categories = [...new Set(data.map(d => d.category))].sort();
-            const accounts = [...new Set(data.map(d => d.account))].sort();
-            const afikim = [...new Set(data.map(d => d.afik))].filter(a => a).sort();
+            const categories = [...new Set(data.map(d => d.transactionType))].sort();
+            const accounts = [...new Set(data.map(d => d.accountName))].sort();
+
 
             const catSelect = document.getElementById('filter-category');
             categories.forEach(c => {
@@ -1187,12 +1200,9 @@
             });
             
             const afikSelect = document.getElementById('filter-afik');
-            afikim.forEach(a => {
-                const opt = document.createElement('option');
-                opt.value = a;
-                opt.textContent = a;
-                afikSelect.appendChild(opt);
-            });
+            afikSelect.style.display = 'none'; // Hide afik filter as it's not relevant for this view
+            afikSelect.previousElementSibling.style.display = 'none';
+
 
             renderIncomeTable(data);
         }
@@ -1200,24 +1210,24 @@
         function applyFilters() {
             currentFilters.category = document.getElementById('filter-category').value;
             currentFilters.account = document.getElementById('filter-account').value;
-            currentFilters.afik = document.getElementById('filter-afik').value;
             currentFilters.dateFrom = document.getElementById('filter-date-from').value; // yyyy-mm-dd
             currentFilters.dateTo = document.getElementById('filter-date-to').value; // yyyy-mm-dd
 
-            const filteredData = processedData.income_expenses.filter(item => {
+            const filteredData = processedData.accountMovementsReport.filter(item => {
                 let pass = true;
-                if (currentFilters.category && item.category !== currentFilters.category) pass = false;
-                if (currentFilters.account && item.account !== currentFilters.account) pass = false;
-                if (currentFilters.afik && item.afik !== currentFilters.afik) pass = false;
+                if (currentFilters.category && item.transactionType !== currentFilters.category) pass = false;
+                if (currentFilters.account && item.accountName !== currentFilters.account) pass = false;
                 
                 if (currentFilters.dateFrom) {
                     const fromDate = new Date(currentFilters.dateFrom);
-                    if (item.dateObj < fromDate) pass = false;
+                    const itemDate = new Date(item.tradeDate.split('/').reverse().join('-'));
+                    if (itemDate < fromDate) pass = false;
                 }
                 
                 if (currentFilters.dateTo) {
                     const toDate = new Date(currentFilters.dateTo);
-                    if (item.dateObj > toDate) pass = false;
+                    const itemDate = new Date(item.tradeDate.split('/').reverse().join('-'));
+                    if (itemDate > toDate) pass = false;
                 }
                 
                 return pass;
@@ -1229,31 +1239,32 @@
         function clearFilters() {
             document.getElementById('filter-category').value = '';
             document.getElementById('filter-account').value = '';
-            document.getElementById('filter-afik').value = '';
             document.getElementById('filter-date-from').value = '';
             document.getElementById('filter-date-to').value = '';
             
-            currentFilters = { category: '', account: '', afik: '', dateFrom: '', dateTo: '' };
-            renderIncomeTable(processedData.income_expenses);
+            currentFilters = { category: '', account: '', dateFrom: '', dateTo: '' };
+            renderIncomeTable(processedData.accountMovementsReport);
         }
 
         function renderIncomeTable(data) {
             const tbody = document.querySelector('#income-expenses-table tbody');
             tbody.innerHTML = data.map(d => `
                 <tr>
-                    <td>${d.date}</td>
-                    <td>${d.description}</td>
-                    <td>${d.category}</td>
-                    <td>${d.account}</td>
-                    <td>${d.afik || '-'}</td>
-                    <td class="numeric-cell ${getColorClass(d.amount)}">${formatCurrency(d.amount)}</td>
+                    <td>${d.tradeDate}</td>
+                    <td>${d.settlementDate}</td>
+                    <td>${d.securityName}</td>
+                    <td>${d.transactionType}</td>
+                    <td class="numeric-cell">${formatNumber(parseFloat(d.quantity))}</td>
+                    <td class="numeric-cell">${formatNumber(parseFloat(d.price), 2)}</td>
+                    <td class="numeric-cell ${getColorClass(parseFloat(d.amount))}">${formatCurrency(parseFloat(d.amount))}</td>
                 </tr>
             `).join('');
 
             // Update Total
-            const totalEl = document.getElementById('income-expenses-total');
+            const total = data.reduce((sum, item) => sum + parseFloat(item.amount), 0);
+            const totalEl = document.getElementById('filtered-total');
             totalEl.textContent = formatCurrency(total);
-            totalEl.className = 'numeric-cell ' + getColorClass(total);
+            totalEl.className = 'ltr ' + getColorClass(total);
         }
 
         // 10. Account Exposure Matrix

@@ -29,10 +29,14 @@ const rawData = {
   { "afikname": "Total", "shovi": 60653888.8731928, "ahuz": 100 }
  ],
  "geography_exposure":[
-  { "CountryName": "USA", "Shovi": 10379571.38, "Ahuz": 22.78 },
-  { "CountryName": "Israel", "Shovi": 22750853.37, "Ahuz": 49.93 },
-  { "CountryName": "Europe", "Shovi": 11125716.73, "Ahuz": 24.41 },
-  { "CountryName": "Other", "Shovi": 186776.58, "Ahuz": 0.40 }
+  { "CountryName": "", "Shovi": 43442, "Ahuz": 0.50 },
+  { "CountryName": "אירופה", "Shovi": 1858231, "Ahuz": 21.19 },
+  { "CountryName": "ישראל", "Shovi": 2066519, "Ahuz": 23.57 },
+  { "CountryName": "ארה\"ב", "Shovi": 4261330, "Ahuz": 48.59 },
+  { "CountryName": "שווקים מתפתחים", "Shovi": 148547, "Ahuz": 1.69 },
+  { "CountryName": "אחר", "Shovi": 186777, "Ahuz": 2.13 },
+  { "CountryName": "גלובלי", "Shovi": 204456, "Ahuz": 2.33 },
+  { "CountryName": "סה\"כ", "Shovi": 8769302, "Ahuz": 100 }
  ],
  "multi-account_performance":[
   { "hesh_nameEng": "אר.בי ביטון רפאל החזקות בעמ - IBI", "SymbolHalbana": "ש\"ח", "shovi": 1825571.97, "ahuz": 4.00, "tsuaReportMonth": -1.43, "tsuaReportYear": 10.06, "sugdoh": 0 },
@@ -44,36 +48,35 @@ const rawData = {
   { "hesh_nameEng": "רפי ביטון החזקות בעמ SAFRA", "SymbolHalbana": "דולר ארה\"ב", "shovi": 1079002.93, "shoviShekel": 3935123.68, "ahuz": 8.63, "tsuaReportMonth": -1.42, "tsuaReportYear": 12.54, "sugdoh": 0 }
  ],
  "equities_by_sector":[
-  { "Anafim": "בנקאות", "shovi": 1492267.51, "ahuz": 17.01 },
-  { "Anafim": "טכנולוגיה", "shovi": 708756.61, "ahuz": 8.08 },
-  { "Anafim": "מדדים", "shovi": 4919394.00, "ahuz": 56.09 },
-  { "Anafim": "קמעונאות", "shovi": 564429.81, "ahuz": 6.43 },
-  { "Anafim": "רוקחות", "shovi": 553946.38, "ahuz": 6.31 },
-  { "Anafim": "נדל\"ן", "shovi": 51137.57, "ahuz": 0.58 }
+  { "Anafim": "בנקאות", "shovi": 1492268, "ahuz": 17.02 },
+  { "Anafim": "אנרגיה", "shovi": 10725, "ahuz": 0.12 },
+  { "Anafim": "ביטוח", "shovi": 26420, "ahuz": 0.30 },
+  { "Anafim": "נדל\"ן", "shovi": 51138, "ahuz": 0.58 },
+  { "Anafim": "טכנולוגיה", "shovi": 708757, "ahuz": 8.08 },
+  { "Anafim": "אשראי", "shovi": 23052, "ahuz": 0.26 },
+  { "Anafim": "מדדים", "shovi": 4919394, "ahuz": 56.10 },
+  { "Anafim": "קמעונאות", "shovi": 564430, "ahuz": 6.44 },
+  { "Anafim": "תעשיה", "shovi": 11916, "ahuz": 0.14 },
+  { "Anafim": "רוקחות", "shovi": 553946, "ahuz": 6.32 },
+  { "Anafim": "אינטרנט", "shovi": 41850, "ahuz": 0.48 },
+  { "Anafim": "ביו-טכנולוגיה", "shovi": 36129, "ahuz": 0.41 },
+  { "Anafim": "לא מוגדר", "shovi": 329278, "ahuz": 3.75 },
+  { "Anafim": "סה\"כ", "shovi": 8769302, "ahuz": 100 }
  ],
  "equities_by_country": [
-    {
-      "countryName": "USA",
-      "shovi": 300000,
-      "ahuz": 60
-    },
-    {
-      "countryName": "Israel",
-      "shovi": 200000,
-      "ahuz": 40
-    }
+    { "countryName": "שונות", "shovi": 43442, "ahuz": 0.50 },
+    { "countryName": "אירופה", "shovi": 1858231, "ahuz": 21.19 },
+    { "countryName": "ישראל", "shovi": 2066519, "ahuz": 23.57 },
+    { "countryName": "ארה\"ב", "shovi": 4261330, "ahuz": 48.59 },
+    { "countryName": "שווקים מתפתחים", "shovi": 148547, "ahuz": 1.69 },
+    { "countryName": "אחר", "shovi": 186777, "ahuz": 2.13 },
+    { "countryName": "גלובלי", "shovi": 204456, "ahuz": 2.33 },
+    { "countryName": "סה\"כ", "shovi": 8769302, "ahuz": 100 }
   ],
   "equities_by_currency": [
-    {
-      "SugName": "USD",
-      "shovi": 350000,
-      "ahuz": 70
-    },
-    {
-      "SugName": "ILS",
-      "shovi": 150000,
-      "ahuz": 30
-    }
+    { "SugName": "דולר ארה\"ב", "shovi": 5663402, "ahuz": 64.58 },
+    { "SugName": "ש\"ח", "shovi": 3105900, "ahuz": 35.42 },
+    { "SugName": "סה\"כ", "shovi": 8769302, "ahuz": 100 }
   ],
  "bonds_maturity":[
   { "years": 2025, "shovi": 915761.86, "ahuz": 10.51 },
