@@ -409,6 +409,8 @@
             currency_exposure: [], // Not currently used in new layout but kept for ref
             accounts_performance: [],
             equities_sectors: [],
+            equities_by_country: [],
+            equities_by_currency: [],
             bonds_maturity: [],
             bonds_rating: [],
             bonds_currency: [],
@@ -416,6 +418,7 @@
             income_expenses: [],
             account_performance_history: [],
             financial_assets: [],
+            account_exposure: [],
         };
 
         // --- Fetch & Parse ---
@@ -442,17 +445,17 @@
             }
         }
 
-        function processJSON(jsonArray) {
+        function processJSON(root) {
             // The JSON is NOT a flat array based on the user's feedback. It is an Object with keys.
             // The previous logic attempted to treat 'jsonArray' (which is 'rawData') as an array and filter it.
             // That caused the "TypeError: jsonArray.filter is not a function".
             
             // We can directly access the keys of the object.
-            const root = jsonArray; 
+            const r = root; 
 
             // 1. Asset Allocation (overall_assets)
-            if (root.overall_assets && Array.isArray(root.overall_assets)) {
-                processedData.overall_assets = root.overall_assets
+            if (r.overall_assets && Array.isArray(r.overall_assets)) {
+                processedData.overall_assets = r.overall_assets
                     .filter(item => item && item.afikname && item.shovi && item.afikname !== 'Total' && item.afikname !== 'סה"כ' && !item.sugId)
                     .map(item => ({
                         name: item.afikname,
@@ -462,8 +465,8 @@
             }
 
              // 2. Geography Exposure
-            if (root.geography_exposure && Array.isArray(root.geography_exposure)) {
-                processedData.geography_exposure = root.geography_exposure
+            if (r.geography_exposure && Array.isArray(r.geography_exposure)) {
+                processedData.geography_exposure = r.geography_exposure
                     .filter(item => item && item.CountryName && item.Shovi && item.CountryName !== 'Total')
                     .map(item => ({
                         name: item.CountryName === 'Israel' ? 'ישראל' : (item.CountryName === 'USA' ? 'ארה"ב' : (item.CountryName === 'Europe' ? 'אירופה' : item.CountryName)),
@@ -473,8 +476,8 @@
             }
 
             // 3. Market Indices
-            if (root.market_indices && Array.isArray(root.market_indices)) {
-                processedData.market_indices = root.market_indices.map(i => ({
+            if (r.market_indices && Array.isArray(r.market_indices)) {
+                processedData.market_indices = r.market_indices.map(i => ({
                     name: i.nechesName,
                     mtd: i.MTD,
                     ytd: i.YTD
@@ -482,8 +485,8 @@
             }
 
             // 4. Multi-Account Performance
-            if (root["multi-account_performance"] && Array.isArray(root["multi-account_performance"])) { // Note: accessing property with hyphen requires bracket notation
-                 processedData.accounts_performance = root["multi-account_performance"]
+            if (r["multi-account_performance"] && Array.isArray(r["multi-account_performance"])) { // Note: accessing property with hyphen requires bracket notation
+                 processedData.accounts_performance = r["multi-account_performance"]
                     .filter(d => d && d.hesh_nameEng !== 'Total' && d.sugdoh === 0) 
                     .map(d => ({
                         name: d.hesh_nameEng, 
@@ -493,9 +496,9 @@
                         mtd: d.tsuaReportMonth,
                         ytd: d.tsuaReportYear
                      })).sort((a,b) => b.ytd - a.ytd);
-            } else if (root.multi_account_performance && Array.isArray(root.multi_account_performance)) {
+            } else if (r.multi_account_performance && Array.isArray(r.multi_account_performance)) {
                  // Fallback if key was sanitized in JS object to underscores
-                 processedData.accounts_performance = root.multi_account_performance
+                 processedData.accounts_performance = r.multi_account_performance
                     .filter(d => d && d.hesh_nameEng !== 'Total' && d.sugdoh === 0) 
                     .map(d => ({
                         name: d.hesh_nameEng, 
@@ -508,19 +511,21 @@
             }
 
             // 5. Equities By Sector
-            if (root.equities_by_sector && Array.isArray(root.equities_by_sector)) {
-                 processedData.equities_sectors = root.equities_by_sector
-                    .filter(d => d && d.Anafim !== 'Total')
-                    .map(d => ({
-                        name: d.Anafim,
-                        value: d.shovi,
-                        pct: d.ahuz
-                    })).sort((a,b) => b.value - a.value);
+            if (r.equities_by_sector && Array.isArray(r.equities_by_sector)) {
+                processedData.equities_sectors = r.equities_by_sector.map(d => ({ name: d.Anafim, value: d.shovi, pct: d.ahuz }));
             }
 
-            // 6. Bonds Maturity
-            if (root.bonds_maturity && Array.isArray(root.bonds_maturity)) {
-                processedData.bonds_maturity = root.bonds_maturity
+            if (r.equities_by_country && Array.isArray(r.equities_by_country)) {
+                processedData.equities_by_country = r.equities_by_country.map(d => ({ name: d.countryName, value: d.shovi, pct: d.ahuz }));
+            }
+
+            if (r.equities_by_currency && Array.isArray(r.equities_by_currency)) {
+                processedData.equities_by_currency = r.equities_by_currency.map(d => ({ name: d.SugName, value: d.shovi, pct: d.ahuz }));
+            }
+
+            // 7. Bonds
+            if (r.bonds_maturity && Array.isArray(r.bonds_maturity)) {
+                processedData.bonds_maturity = r.bonds_maturity
                     .filter(d => d && d.years !== 99999) // Filter Total
                     .map(d => ({
                         year: d.years === 9999 ? 'ללא' : d.years,
@@ -530,8 +535,8 @@
             }
             
             // 6b. Bonds Rating
-            if (root.bonds_rating && Array.isArray(root.bonds_rating)) {
-                processedData.bonds_rating = root.bonds_rating
+            if (r.bonds_rating && Array.isArray(r.bonds_rating)) {
+                processedData.bonds_rating = r.bonds_rating
                     .filter(d => d && d.DerugName !== 'Total')
                     .map(d => ({
                         name: d.DerugName,
@@ -541,8 +546,8 @@
             }
 
             // 6c. Bonds Currency
-            if (root.bonds_currency && Array.isArray(root.bonds_currency)) {
-                processedData.bonds_currency = root.bonds_currency
+            if (r.bonds_currency && Array.isArray(r.bonds_currency)) {
+                processedData.bonds_currency = r.bonds_currency
                     .filter(d => d && d.hatzmadaName !== 'Total')
                     .map(d => ({
                         name: d.hatzmadaName,
@@ -552,8 +557,8 @@
             }
             
             // 7. Performance History
-            if (root.performance_by_month && Array.isArray(root.performance_by_month)) {
-                processedData.performance_history = root.performance_by_month
+            if (r.performance_by_month && Array.isArray(r.performance_by_month)) {
+                processedData.performance_history = r.performance_by_month
                     .filter(d => d && d.sugDoh === 1 && d.ddate !== '01/01/2500')
                     .map(d => ({
                         date: d.ddate,
@@ -564,8 +569,8 @@
             }
 
             // 8. Income & Expenses
-            if (root.income_expenses && Array.isArray(root.income_expenses)) {
-                processedData.income_expenses = root.income_expenses.map(d => ({
+            if (r.income_expenses && Array.isArray(r.income_expenses)) {
+                processedData.income_expenses = r.income_expenses.map(d => ({
                     date: d.date,
                     // Parse date string dd/mm/yyyy to Date object for sorting if needed
                     dateObj: new Date(d.date.split('/').reverse().join('-')),
@@ -578,18 +583,20 @@
             }
 
             // 9. Account Performance History
-            if (root.account_performance_history && Array.isArray(root.account_performance_history)) {
-                processedData.account_performance_history = root.account_performance_history;
+            if (r.account_performance_history && Array.isArray(r.account_performance_history)) {
+                processedData.account_performance_history = r.account_performance_history.map(d => ({ name: d.accountName, history: d.history }));
             }
 
-            if (root.financial_assets && Array.isArray(root.financial_assets)) {
-                processedData.financial_assets = root.financial_assets
-                    .filter(item => item && item.name && item.value)
-                    .map(item => ({
-                        name: item.name,
-                        value: item.value,
-                        pct: item.pct
-                    })).sort((a,b) => b.value - a.value);
+            if (r.financial_assets && Array.isArray(r.financial_assets)) {
+                processedData.financial_assets = r.financial_assets.map(d => ({ name: d.name, value: d.value, pct: d.pct }));
+            }
+            
+            if (r.account_exposure && Array.isArray(r.account_exposure)) {
+                processedData.account_exposure = r.account_exposure.map(d => ({
+                    account: d.account,
+                    asset_class: d.asset_class,
+                    shovi: d.shovi
+                }));
             }
         }
 
@@ -681,6 +688,8 @@
             renderGeography();
             renderAccounts();
             renderEquities();
+            renderEquitiesByCountry();
+            renderEquitiesByCurrency();
             renderBonds();
             renderBondRatings();
             renderBondCurrency();
@@ -688,8 +697,6 @@
             initIncomeExpensesTable();
             renderAccountHistory();
             renderAccountExposureMatrix();
-            renderEquitiesByCountry();
-            renderEquitiesByCurrency();
         }
         
         // 1. Market Indices
@@ -760,7 +767,7 @@
              const tbody = document.querySelector('#financial-allocation-table tbody');
              tbody.innerHTML = data.map(d => `
                 <tr>
-                    <td class="numeric-cell">${d.name}</td>
+                    <td>${d.name}</td>
                     <td class="numeric-cell">${formatNumber(d.value)}</td>
                     <td class="numeric-cell">${formatPercent(d.pct)}</td>
                 </tr>
@@ -907,27 +914,21 @@
 
         // 5b. Equities by Country
         function renderEquitiesByCountry() {
-            // Placeholder data, as raw data is not available
-            const data = [
-                { name: 'ארה"ב', value: 3575231, pct: 39.48 },
-                { name: 'ישראל', value: 3052719, pct: 33.71 },
-                { name: 'אירופה', value: 2124574, pct: 23.46 },
-                { name: 'שווקים מתעוררים', value: 190136, pct: 2.10 },
-                { name: 'אחר', value: 114121, pct: 1.26 }
-            ].sort((a,b) => b.value - a.value);
+            const data = processedData.equities_by_country;
+            if(!data || data.length === 0) return;
 
-            // Table
-            const tbody = document.querySelector('#equities-country-table tbody');
-            tbody.innerHTML = data.map(d => `
+             // Table
+             const tbody = document.querySelector('#equities-country-table tbody');
+             tbody.innerHTML = data.map(d => `
                 <tr>
                     <td>${d.name}</td>
                     <td class="numeric-cell">${formatNumber(d.value)}</td>
                     <td class="numeric-cell">${formatPercent(d.pct)}</td>
                 </tr>
-            `).join('');
+             `).join('');
 
-            // Chart
-            new Chart(document.getElementById('equitiesCountryChart'), {
+             // Chart
+             new Chart(document.getElementById('equitiesCountryChart'), {
                 type: 'pie',
                 data: {
                     labels: data.map(d => d.name),
@@ -942,24 +943,21 @@
 
         // 5c. Equities by Currency
         function renderEquitiesByCurrency() {
-            // Placeholder data
-            const data = [
-                { name: 'דולר ארה"ב', value: 5283285, pct: 58.34 },
-                { name: 'ש"ח', value: 3773497, pct: 41.66 }
-            ].sort((a,b) => b.value - a.value);
+            const data = processedData.equities_by_currency;
+            if(!data || data.length === 0) return;
 
-            // Table
-            const tbody = document.querySelector('#equities-currency-table tbody');
-            tbody.innerHTML = data.map(d => `
+             // Table
+             const tbody = document.querySelector('#equities-currency-table tbody');
+             tbody.innerHTML = data.map(d => `
                 <tr>
                     <td>${d.name}</td>
                     <td class="numeric-cell">${formatNumber(d.value)}</td>
                     <td class="numeric-cell">${formatPercent(d.pct)}</td>
                 </tr>
-            `).join('');
+             `).join('');
 
-            // Chart
-            new Chart(document.getElementById('equitiesCurrencyChart'), {
+             // Chart
+             new Chart(document.getElementById('equitiesCurrencyChart'), {
                 type: 'doughnut',
                 data: {
                     labels: data.map(d => d.name),
@@ -1240,73 +1238,110 @@
 
         function renderIncomeTable(data) {
             const tbody = document.querySelector('#income-expenses-table tbody');
-            tbody.innerHTML = '';
-
-            let total = 0;
-
-            if (data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">לא נמצאו נתונים</td></tr>';
-            } else {
-                tbody.innerHTML = data.map(d => {
-                    total += d.amount;
-                    const amountClass = getColorClass(d.amount);
-                    return `
-                        <tr>
-                            <td>${d.date}</td>
-                            <td>${d.description}</td>
-                            <td>${d.category}</td>
-                            <td>${d.account}</td>
-                            <td>${d.afik || '-'}</td>
-                            <td class="numeric-cell ${amountClass}">${formatCurrency(d.amount)}</td>
-                        </tr>
-                    `;
-                }).join('');
-            }
+            tbody.innerHTML = data.map(d => `
+                <tr>
+                    <td>${d.date}</td>
+                    <td>${d.description}</td>
+                    <td>${d.category}</td>
+                    <td>${d.account}</td>
+                    <td>${d.afik || '-'}</td>
+                    <td class="numeric-cell ${getColorClass(d.amount)}">${formatCurrency(d.amount)}</td>
+                </tr>
+            `).join('');
 
             // Update Total
-            const totalEl = document.getElementById('filtered-total');
+            const totalEl = document.getElementById('income-expenses-total');
             totalEl.textContent = formatCurrency(total);
             totalEl.className = 'numeric-cell ' + getColorClass(total);
         }
 
         // 10. Account Exposure Matrix
         function renderAccountExposureMatrix() {
-            // As noted, the raw data for this matrix (asset value per account per asset class) is not in the JSON.
-            // We will construct the table structure dynamically and fill it with placeholder data for now.
-            
-            const accounts = processedData.accounts_performance.map(a => a.name);
-            const assetClasses = [...new Set(processedData.overall_assets.map(a => a.name))];
+            const data = processedData.account_exposure;
+            if (!data || data.length === 0) return;
 
+            const accountOrder = [
+                'אר.בי ביטון נדל\"ן ישיר',
+                'אר.בי ביטון השקעות בסטראט-אפ',
+                'רפי ביטון החזקות בעמ SAFRA',
+                'אר.בי ביטון רפאל החזקות PI',
+                'UBP',
+                'אר.בי ביטון רפאל החזקות בע\"מ-לאומי',
+                'אר.בי ביטון רפאל החזקות בע\"מ - תפנית',
+                'אר.בי ביטון החזקות בעמ - פועלים',
+                'אר.בי ביטון רפאל החזקות בעמ - IBI'
+            ];
+
+            const accountDisplayNames = {
+                'אר.בי ביטון נדל\"ן ישיר': 'נדל"ן ישיר',
+                'אר.בי ביטון השקעות בסטראט-אפ': 'סטראט-אפ',
+                'רפי ביטון החזקות בעמ SAFRA': 'SAFRA',
+                'אר.בי ביטון רפאל החזקות PI': 'PI',
+                'UBP': 'UBP',
+                'אר.בי ביטון רפאל החזקות בע\"מ-לאומי': 'לאומי',
+                'אר.בי ביטון רפאל החזקות בע\"מ - תפנית': 'תפנית',
+                'אר.בי ביטון החזקות בעמ - פועלים': 'פועלים',
+                'אר.בי ביטון רפאל החזקות בעמ - IBI': 'IBI'
+            };
+            
+            const assetClasses = processedData.overall_assets.map(a => a.name).filter(name => name !== 'Total');
             const table = document.getElementById('account-exposure-matrix-table');
             
-            // 1. Create Header
             let theadHTML = '<tr><th>אפיק</th>';
-            accounts.forEach(acc => {
-                theadHTML += `<th>${acc.substring(0, 15)}...</th>`; // Shorten name
+            accountOrder.forEach(acc => {
+                theadHTML += `<th>${accountDisplayNames[acc] || acc}</th>`;
             });
             theadHTML += '<th>סה"כ</th></tr>';
             table.querySelector('thead').innerHTML = theadHTML;
 
-            // 2. Create Body
             let tbodyHTML = '';
+            const columnTotals = accountOrder.map(() => 0);
+
             assetClasses.forEach(ac => {
-                tbodyHTML += `<tr><td>${ac}</td>`;
-                let rowTotal = 0;
-                accounts.forEach(acc => {
-                    // ** Placeholder Logic **
-                    // In a real scenario, we'd look up the value: e.g., getValue(accountName, assetClassName)
-                    const placeholderValue = Math.random() * 100000; // Replace with real data when available
-                    rowTotal += placeholderValue;
-                    tbodyHTML += `<td class="numeric-cell">${"$" + formatNumber(placeholderValue)}</td>`;
+                tbodyHTML += '<tr>';
+                tbodyHTML += `<td>${ac}</td>`;
+                
+                accountOrder.forEach((acc, index) => {
+                    const item = data.find(d => d.asset_class === ac && d.account === acc);
+                    const value = item ? item.shovi : 0;
+                    tbodyHTML += `<td class="numeric-cell">${value > 0 ? formatNumber(value) : '-'}</td>`;
+                    if (item) {
+                        columnTotals[index] += value;
+                    }
                 });
-                tbodyHTML += `<td class="numeric-cell" style="font-weight:bold;">${formatNumber(rowTotal)}</td>`;
+
+                const totalAssetItem = processedData.overall_assets.find(a => a.name === ac);
+                const displayTotal = totalAssetItem ? totalAssetItem.value : 0;
+                tbodyHTML += `<td class="numeric-cell total-cell">${formatNumber(displayTotal)}</td>`;
                 tbodyHTML += '</tr>';
             });
             table.querySelector('tbody').innerHTML = tbodyHTML;
+
+            let tfootHTML = '<tr><td class="total-cell">סה"כ</td>';
+            
+            columnTotals.forEach(total => {
+                tfootHTML += `<td class="numeric-cell total-cell">${formatNumber(total)}</td>`;
+            });
+
+            const overallTotal = processedData.overall_assets.reduce((sum, item) => sum + item.value, 0);
+            tfootHTML += `<td class="numeric-cell total-cell">${formatNumber(overallTotal)}</td>`;
+            tfootHTML += '</tr>';
+
+            let tfoot = table.querySelector('tfoot');
+            if (!tfoot) {
+                tfoot = document.createElement('tfoot');
+                table.appendChild(tfoot);
+            }
+            tfoot.innerHTML = tfootHTML;
         }
 
         function renderAccountHistory() {
-            // Placeholder for account history rendering
+            const data = processedData.account_performance_history;
+            if (!data || data.length === 0) return;
+
+            // For now, just display the account names
+            const container = document.getElementById('account-history-container');
+            container.innerHTML = data.map(d => `<div>${d.name}</div>`).join('');
         }
 
         function toggleAccountView(viewName) {
