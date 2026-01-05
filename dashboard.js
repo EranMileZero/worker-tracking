@@ -1,4 +1,3 @@
-
 // Data Parsing Logic
 // We parse the mixed Hebrew/English keys from the specific JSON structure provided.
 // The structure is an array of objects where the first few objects are metadata definitions.
@@ -344,7 +343,8 @@ function renderAssetAllocation() {
      const data = processedData.overall_assets;
      
      // Table
-     const tbody = document.querySelector('#asset-allocation-table tbody');
+     const table = document.getElementById('asset-allocation-table');
+     const tbody = table.querySelector('tbody');
      tbody.innerHTML = data.map(d => `
         <tr>
             <td>${d.name}</td>
@@ -352,6 +352,21 @@ function renderAssetAllocation() {
             <td class="numeric-cell">${formatPercent(d.pct)}</td>
         </tr>
      `).join('');
+
+    // Add footer for totals
+    const totalValue = data.reduce((sum, item) => sum + item.value, 0);
+    let tfoot = table.querySelector('tfoot');
+    if (!tfoot) {
+        tfoot = document.createElement('tfoot');
+        table.appendChild(tfoot);
+    }
+    tfoot.innerHTML = `
+        <tr class="total-row">
+            <td><strong>סה"כ</strong></td>
+            <td class="numeric-cell"><strong>${formatNumber(totalValue)}</strong></td>
+            <td class="numeric-cell"><strong>${formatPercent(100)}</strong></td>
+        </tr>
+    `;
 
      // Chart
      const colors = ['#0d6efd', '#6610f2', '#6f42c1', '#d63384', '#dc3545', '#fd7e14', '#ffc107', '#198754'];
@@ -378,7 +393,8 @@ function renderFinancialAllocation() {
      if (!data || data.length === 0) return;
      
      // Table
-     const tbody = document.querySelector('#financial-allocation-table tbody');
+     const table = document.getElementById('financial-allocation-table');
+     const tbody = table.querySelector('tbody');
      tbody.innerHTML = data.map(d => `
         <tr>
             <td>${d.name}</td>
@@ -386,6 +402,22 @@ function renderFinancialAllocation() {
             <td class="numeric-cell">${formatPercent(d.pct)}</td>
         </tr>
      `).join('');
+
+    // Add footer for totals
+    const totalValue = data.reduce((sum, item) => sum + item.value, 0);
+    const totalPct = data.reduce((sum, item) => sum + item.pct, 0);
+    let tfoot = table.querySelector('tfoot');
+    if (!tfoot) {
+        tfoot = document.createElement('tfoot');
+        table.appendChild(tfoot);
+    }
+    tfoot.innerHTML = `
+        <tr class="total-row">
+            <td><strong>סה"כ</strong></td>
+            <td class="numeric-cell"><strong>${formatNumber(totalValue)}</strong></td>
+            <td class="numeric-cell"><strong>${formatPercent(totalPct)}</strong></td>
+        </tr>
+    `;
 
      // Chart
      const colors = ['#20c997', '#6f42c1', '#d63384', '#fd7e14', '#ffc107', '#198754', '#0d6efd', '#6610f2'];
@@ -410,7 +442,8 @@ function renderFinancialAllocation() {
 function renderGeography() {
     const data = processedData.geography_exposure;
      // Table
-     const tbody = document.querySelector('#geography-exposure-table tbody');
+     const table = document.getElementById('geography-exposure-table');
+     const tbody = table.querySelector('tbody');
      tbody.innerHTML = data.map(d => `
         <tr>
             <td>${d.name}</td>
@@ -418,6 +451,21 @@ function renderGeography() {
             <td class="numeric-cell">${formatPercent(d.pct)}</td>
         </tr>
      `).join('');
+    
+    // Add footer for totals
+    const totalValue = data.reduce((sum, item) => sum + item.value, 0);
+    let tfoot = table.querySelector('tfoot');
+    if (!tfoot) {
+        tfoot = document.createElement('tfoot');
+        table.appendChild(tfoot);
+    }
+    tfoot.innerHTML = `
+        <tr class="total-row">
+            <td><strong>סה"כ</strong></td>
+            <td class="numeric-cell"><strong>${formatNumber(totalValue)}</strong></td>
+            <td class="numeric-cell"><strong>${formatPercent(100)}</strong></td>
+        </tr>
+    `;
 
      // Chart
      new Chart(document.getElementById('geographyExposureChart'), {
