@@ -71,6 +71,12 @@ const rawData = {
     { "sort": 2, "hatzmadaName": "צמוד מדד", "shovi": 2500000, "ahuz": 28.7 },
     { "sort": 3, "hatzmadaName": "דולר", "shovi": 1700000, "ahuz": 19.6 }
  ],
+ "financial_assets": [
+    { "name": "מזומן", "value": 1200000, "pct": 10 },
+    { "name": "אג\"ח ממשלתי", "value": 3000000, "pct": 25 },
+    { "name": "אג\"ח חברות", "value": 2400000, "pct": 20 },
+    { "name": "מניות", "value": 5400000, "pct": 45 }
+  ],
  "performance_by_month":[
   { "sugDoh": 1, "ddate": "12/31/2023", "shovi": 75831618.18, "netoDeposit": 0, "revachNominBruto": 0 },
   { "sugDoh": 1, "ddate": "01/31/2024", "shovi": 78498839.41, "netoDeposit": -2985066.84, "revachNominBruto": 5652596.56 },
@@ -96,6 +102,16 @@ const rawData = {
       { "date": "20/02/2024", "description": "מס רווחי הון", "category": "מיסים", "amount": -3750, "account": "פועלים", "afik": "כללי" },
       { "date": "01/03/2024", "description": "הפקדה חודשית", "category": "הפקדה", "amount": 50000, "account": "לאומי", "afik": "מזומן" },
       { "date": "15/03/2024", "description": "דמי משמרת", "category": "עמלות", "amount": -200, "account": "תפנית", "afik": "כללי" }
+  ],
+  "account_performance_history": [
+    {
+      "accountName": "אר.בי ביטון רפאל החזקות בעמ - IBI",
+      "history": [ 1.2, -0.5, 2.3, 1.8, -0.9, 3.1, 0.5, 1.2, -0.3, 2.5, 1.9, 0.8 ]
+    },
+    {
+      "accountName": "אר.בי ביטון החזקות בעמ - פועלים",
+      "history": [ 0.8, 1.1, 1.5, 0.9, -0.2, 2.5, 1.3, 0.7, -0.1, 1.8, 1.2, 0.9 ]
+    }
   ]
 };
 
